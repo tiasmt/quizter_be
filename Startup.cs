@@ -10,6 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using quizter_be.Hubs;
+using quizter_be.Services;
+using quizter_be.Repository;
 
 namespace quizter_be
 {
@@ -25,7 +28,20 @@ namespace quizter_be
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(
+                    builder =>
+                    {
+                        builder.WithOrigins("https://localhost:8080").AllowAnyHeader().AllowAnyMethod();
+                        builder.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod();
+                    });
+            });
+            services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"./Repo/Games/"));
+           
+            services.AddScoped<IGameService, GameService>();
             services.AddControllers();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,11 +56,14 @@ namespace quizter_be
 
             app.UseRouting();
 
+            app.UseCors();
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<GameHub>("/gamehub");
             });
         }
     }
