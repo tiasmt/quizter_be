@@ -20,10 +20,23 @@ namespace quizter_be.Controllers
         }
 
         [HttpGet("creategame")]
-        public Task<Game> CreateGame()
+        public async Task<string> CreateGame()
         {
-            return _gameService.CreateGame();
+            return await _gameService.CreateGame();
         }
 
+        [HttpPost("setcategory")]
+        public async Task<string> SetCategory(string gameName, string gameCategory)
+        {
+            return await _gameService.SetCategory(gameName, gameCategory);
+        }
+
+        [HttpPost("setsettings")]
+        public async Task<IActionResult> SetSettings(string gameName,string gameCategory, [FromBody] Settings settings)
+        {
+            var game = new Game{GameName=gameName, GameCategory=gameCategory};
+            await _gameService.SetSettings(game, settings);
+            return Ok();
+        }
     }
 }

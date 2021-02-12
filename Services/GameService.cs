@@ -15,10 +15,21 @@ namespace quizter_be.Services
             _storage = storage;
         }
 
-        public Task<Game> CreateGame()
+        public async Task<string> CreateGame()
         {
             var gameName = Utils.RandomString();
-            return _storage.CreateGame(gameName);
+            return await _storage.CreateGame(gameName);
         }
+
+        public async Task<string> SetCategory(string gameName,string category)
+        {
+            return await _storage.SetCategory(gameName, category);
+        }
+
+        public async Task SetSettings(Game game, Settings settings)
+        {
+            await _storage.SetSettings(game, settings);
+        }
+
     }
 }

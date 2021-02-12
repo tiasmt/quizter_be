@@ -6,6 +6,8 @@ namespace quizter_be.Services
 {
     public interface IGameService
     {
-        Task<Game> CreateGame();
+        Task<string> CreateGame();
+        Task<string> SetCategory(string gameName, string category);
+        Task SetSettings(Game game, Settings settings);
     }
 }

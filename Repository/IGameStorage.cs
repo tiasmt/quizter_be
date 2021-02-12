@@ -7,8 +7,10 @@ namespace quizter_be.Repository
     public interface IGameStorage
     {
         Task<IEnumerable<Game>> GetAllGames();
-        Task<Game> GetGame(string name);
+        Task<Game> GetGame(string gameName);
         Task<Game> GetGame(int id);
-        Task<Game> CreateGame(string gameName);
+        Task<string> CreateGame(string gameName);
+        Task<string> SetCategory(string gameName, string category);
+        Task SetSettings(Game gamee, Settings settings);
     }
 }
