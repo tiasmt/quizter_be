@@ -31,5 +31,10 @@ namespace quizter_be.Services
             await _storage.SetSettings(game, settings);
         }
 
+        public async Task<int> CreatePlayer(Player player, string gameName)
+        {
+            return await _storage.CreatePlayer(player, gameName);
+        }
+
     }
 }

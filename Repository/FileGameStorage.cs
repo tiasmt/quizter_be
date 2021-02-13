@@ -11,6 +11,7 @@ namespace quizter_be.Repository
     {
         private readonly string _directoryPath;
         private readonly string _defaultFileName = "GameOverview";
+        private readonly string _playersFolder = "Players";
         public FileGameStorage(string directoryPath)
         {
             _directoryPath = directoryPath;
@@ -82,6 +83,24 @@ namespace quizter_be.Repository
             };
             var path = _directoryPath + $"/{game.GameName}/{_defaultFileName}.txt";
             await File.WriteAllLinesAsync(path, lines);
+        }
+
+        public async Task<int> CreatePlayer(Player player, string gameName)
+        {
+            var parentPath = _directoryPath + $"{gameName}/{_playersFolder}/";
+            DirectoryInfo di = Directory.CreateDirectory(parentPath);
+            var playerId = new List<string>(Directory.EnumerateFiles(parentPath)).Count + 1;
+            string[] lines =
+            {
+                $"Username: {player.Username}",
+                $"Avatar: {player.Avatar}",
+                $"Correct Answers: {player.CorrectAnswers}",
+                $"Wrong Answers: {player.WrongAnswers}"
+            };
+
+            var path = _directoryPath + $"/{gameName}/{_playersFolder}/{playerId}.txt";
+            await File.WriteAllLinesAsync(path, lines);
+            return playerId;
         }
     }
 }

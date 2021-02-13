@@ -11,6 +11,7 @@ namespace quizter_be.Repository
         Task<Game> GetGame(int id);
         Task<string> CreateGame(string gameName);
         Task<string> SetCategory(string gameName, string category);
-        Task SetSettings(Game gamee, Settings settings);
+        Task SetSettings(Game game, Settings settings);
+        Task<int> CreatePlayer(Player player, string gameName);
     }
 }

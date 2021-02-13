@@ -38,5 +38,12 @@ namespace quizter_be.Controllers
             await _gameService.SetSettings(game, settings);
             return Ok();
         }
+        [HttpPost("createplayer")]
+        public async Task<IActionResult> CreatePlayer(string username,string avatar, string gameName)
+        {
+            var player = new Player{Username=username, Avatar=avatar };
+            var id = await _gameService.CreatePlayer(player, gameName);
+            return Ok(id);
+        }
     }
 }
