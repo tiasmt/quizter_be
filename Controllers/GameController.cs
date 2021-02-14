@@ -24,33 +24,35 @@ namespace quizter_be.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet("creategame")]
+        [HttpGet("CreateGame")]
         public async Task<string> CreateGame()
         {
             return await _gameService.CreateGame();
         }
 
-        [HttpPost("setcategory")]
+        [HttpPost("SetCategory")]
         public async Task<string> SetCategory(string gameName, string gameCategory)
         {
             return await _gameService.SetCategory(gameName, gameCategory);
         }
 
-        [HttpPost("setsettings")]
+        [HttpPost("SetSettings")]
         public async Task<IActionResult> SetSettings(string gameName, string gameCategory, [FromBody] Settings settings)
         {
             var game = new Game { GameName = gameName, GameCategory = gameCategory };
             await _gameService.SetSettings(game, settings);
             return Ok();
         }
-        [HttpPost("createplayer")]
+        [HttpPost("CreatePlayer")]
         public async Task<IActionResult> CreatePlayer(string username, string avatar, string gameName)
         {
             var player = new Player { Username = username, Avatar = avatar };
             var id = await _gameService.CreatePlayer(player, gameName);
             var gamehub = new GameHub(_hubContext, _gameService);
-            await gamehub.StartTimer(gameName);
+            await gamehub.CreateTimer(gameName);
             return Ok(id);
         }
+
+       
     }
 }

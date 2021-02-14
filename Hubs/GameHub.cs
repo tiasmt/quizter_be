@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using quizter_be.Services;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace quizter_be.Hubs
 {
@@ -10,20 +11,31 @@ namespace quizter_be.Hubs
         private readonly IGameService _service;
         private int _timeLeft;
         private int _initialTime;
+        private Timer _timer;
         public GameHub(IHubContext<GameHub, IGameHub> hubContext, IGameService service)
         {
             _hubContext = hubContext;
             _service = service;
         }
 
-        public async Task StartTimer(string gameName)
+        public async Task CreateTimer(string gameName)
         {
-            var timer = new System.Timers.Timer(1000);
+            _timer??= new Timer(1000);
             _timeLeft = await GetInitialTime(gameName);
             _initialTime = _timeLeft;
-            timer.Elapsed +=(sender, e) => HeartBeat(sender, e);
-            timer.Interval = 1000;
-            timer.Enabled = true;
+            _timer.Elapsed +=(sender, e) => HeartBeat(sender, e);
+            _timer.Interval = 1000;
+            _timer.Enabled = true;
+        }
+
+        public void StopTimer()
+        {
+            _timer.Enabled = false;
+        }
+
+        public void StartTimer()
+        {
+            _timer.Enabled = true;
         }
 
         public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e)
