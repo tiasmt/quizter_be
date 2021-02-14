@@ -9,6 +9,11 @@ namespace quizter_be.Repository
 {
     public class FileGameStorage : IGameStorage
     {
+        
+        private const string Category = "Category: ";
+        private const string TotalNumberOfPlayers = "Total Number Of Players: ";
+        private const string TotalNumberOfQuestions = "Total Number Of Questions: ";
+        private const string TimePerQuestion = "Time Per Question: ";
         private readonly string _directoryPath;
         private readonly string _defaultFileName = "GameOverview";
         private readonly string _playersFolder = "Players";
@@ -39,9 +44,21 @@ namespace quizter_be.Repository
             }
         }
 
-        public Task<Game> GetGame(string name)
+        public async Task<Game> GetGame(string name)
         {
-            throw new System.NotImplementedException();
+            Game game = new Game();
+            game.GameSettings = new Settings();
+            game.GameName = name;
+
+            var path = _directoryPath + name + '/' + _defaultFileName + ".txt";
+            var gameData =  await File.ReadAllLinesAsync(path);
+            //Parse data
+            game.GameCategory = gameData[0].Substring(Category.Length);
+            game.GameSettings.NumberOfPlayers = int.Parse(gameData[1].Substring(TotalNumberOfPlayers.Length));
+            game.GameSettings.TotalNumberOfQuestions = int.Parse(gameData[2].Substring(TotalNumberOfQuestions.Length));
+            game.GameSettings.TimePerQuestion = int.Parse(gameData[3].Substring(TimePerQuestion.Length));
+            
+            return game;
         }
 
         public Task<Game> GetGame(int id)
@@ -83,6 +100,7 @@ namespace quizter_be.Repository
             };
             var path = _directoryPath + $"/{game.GameName}/{_defaultFileName}.txt";
             await File.WriteAllLinesAsync(path, lines);
+
         }
 
         public async Task<int> CreatePlayer(Player player, string gameName)

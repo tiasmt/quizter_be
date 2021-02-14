@@ -36,5 +36,9 @@ namespace quizter_be.Services
             return await _storage.CreatePlayer(player, gameName);
         }
 
+        public async Task<Game> GetGame(string gameName)
+        {
+            return await _storage.GetGame(gameName);
+        }
     }
 }

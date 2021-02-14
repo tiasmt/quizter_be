@@ -10,5 +10,6 @@ namespace quizter_be.Services
         Task<string> SetCategory(string gameName, string category);
         Task SetSettings(Game game, Settings settings);
         Task<int> CreatePlayer(Player player, string gameName);
+        Task<Game> GetGame(string gameName);
     }
 }

@@ -1,7 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using quizter_be.Hubs;
 using quizter_be.Models;
+using quizter_be.Repository;
 using quizter_be.Services;
 
 namespace quizter_be.Controllers
@@ -12,11 +15,13 @@ namespace quizter_be.Controllers
     {
         private readonly ILogger<GameController> _logger;
         private IGameService _gameService;
+        private readonly IHubContext<GameHub, IGameHub> _hubContext;
 
-        public GameController(IGameService gameService,ILogger<GameController> logger)
+        public GameController(IGameService gameService, ILogger<GameController> logger, IHubContext<GameHub, IGameHub> hubContext)
         {
             _gameService = gameService;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpGet("creategame")]
@@ -32,17 +37,19 @@ namespace quizter_be.Controllers
         }
 
         [HttpPost("setsettings")]
-        public async Task<IActionResult> SetSettings(string gameName,string gameCategory, [FromBody] Settings settings)
+        public async Task<IActionResult> SetSettings(string gameName, string gameCategory, [FromBody] Settings settings)
         {
-            var game = new Game{GameName=gameName, GameCategory=gameCategory};
+            var game = new Game { GameName = gameName, GameCategory = gameCategory };
             await _gameService.SetSettings(game, settings);
             return Ok();
         }
         [HttpPost("createplayer")]
-        public async Task<IActionResult> CreatePlayer(string username,string avatar, string gameName)
+        public async Task<IActionResult> CreatePlayer(string username, string avatar, string gameName)
         {
-            var player = new Player{Username=username, Avatar=avatar };
+            var player = new Player { Username = username, Avatar = avatar };
             var id = await _gameService.CreatePlayer(player, gameName);
+            var gamehub = new GameHub(_hubContext, _gameService);
+            await gamehub.StartTimer(gameName);
             return Ok(id);
         }
     }
