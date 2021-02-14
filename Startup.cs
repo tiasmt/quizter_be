@@ -33,8 +33,8 @@ namespace quizter_be
                 options.AddDefaultPolicy(
                     builder =>
                     {
-                        builder.WithOrigins("https://localhost:8080").AllowAnyHeader().AllowAnyMethod();
-                        builder.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod();
+                        builder.WithOrigins("https://localhost:8080").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                        builder.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                     });
             });
             services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"./Repo/Games/"));
