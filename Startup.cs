@@ -38,7 +38,7 @@ namespace quizter_be
                     });
             });
             services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"./Repo/Games/"));
-            services.AddScoped<IQuestionStorage>(storage => new FileQuestionStorage(@"./Repo/Games/"));
+            services.AddScoped<IQuestionStorage>(storage => new FileQuestionStorage(@"./Questions/", @"./Repo/Games/"));
            
             services.AddScoped<IGameService, GameService>();
             services.AddScoped<IQuestionService, QuestionService>();

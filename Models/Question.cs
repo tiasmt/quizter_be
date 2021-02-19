@@ -1,6 +1,5 @@
 
 using System.Collections.Generic;
-using mtquiz_be.Models;
 
 namespace quizter_be.Models
 {

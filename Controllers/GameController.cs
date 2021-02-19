@@ -15,11 +15,13 @@ namespace quizter_be.Controllers
     {
         private readonly ILogger<GameController> _logger;
         private IGameService _gameService;
+        private readonly IQuestionService _questionService;
         private readonly IHubContext<GameHub, IGameHub> _hubContext;
 
-        public GameController(IGameService gameService, ILogger<GameController> logger, IHubContext<GameHub, IGameHub> hubContext)
+        public GameController(IGameService gameService, IQuestionService questionService, ILogger<GameController> logger, IHubContext<GameHub, IGameHub> hubContext)
         {
             _gameService = gameService;
+            _questionService = questionService;
             _logger = logger;
             _hubContext = hubContext;
         }
@@ -31,9 +33,10 @@ namespace quizter_be.Controllers
         }
 
         [HttpPost("SetCategory")]
-        public async Task<string> SetCategory(string gameName, string gameCategory)
+        public async Task<IActionResult> SetCategory(string gameName, string gameCategory)
         {
-            return await _gameService.SetCategory(gameName, gameCategory);
+            await _gameService.SetCategory(gameName, gameCategory);
+            return Ok(gameCategory);
         }
 
         [HttpPost("SetSettings")]
@@ -41,6 +44,7 @@ namespace quizter_be.Controllers
         {
             var game = new Game { GameName = gameName, GameCategory = gameCategory };
             await _gameService.SetSettings(game, settings);
+            await _questionService.CreateQuestions(gameName,gameCategory, settings.TotalNumberOfQuestions);
             return Ok();
         }
         [HttpPost("CreatePlayer")]
@@ -53,6 +57,11 @@ namespace quizter_be.Controllers
             return Ok(id);
         }
 
-       
+        // [HttpPost("CheckQuestion")]
+        // public async Task<IActionResult> CheckQuestion(string username, string gameName)
+        // {
+           
+        //     return Ok();
+        // }
     }
 }

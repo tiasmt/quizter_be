@@ -1,4 +1,4 @@
-namespace mtquiz_be.Models
+namespace quizter_be.Models
 {
     public class Answer
     {

@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using quizter_be.Models;
+using quizter_be.Repository;
 
 namespace quizter_be.Services
 {
     public class QuestionService : IQuestionService
     {
-        public Task CreateQuestions(string category)
+        private readonly IQuestionStorage _storage;
+
+        public QuestionService(IQuestionStorage storage)
         {
-            throw new System.NotImplementedException();
+            _storage = storage;
+        }
+        public async Task<bool> CreateQuestions(string gameName, string category, int totalNumberOfQuestions)
+        {
+            return await _storage.CreateQuestions(gameName, category, totalNumberOfQuestions);
         }
         public Task<bool> CheckAnswer(string gameName, string playerName, int questionId)
         {

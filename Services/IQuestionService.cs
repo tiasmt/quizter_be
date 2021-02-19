@@ -7,7 +7,7 @@ namespace quizter_be.Services
 {
     public interface IQuestionService
     {
-        Task CreateQuestions(string category);
+        Task<bool> CreateQuestions(string gameName, string category, int totalNumberOfQuestions);
         Task<bool> CheckAnswer(string gameName, string playerName, int questionId);
         Task<List<string>> NextQuestion(int questionId);
     }
