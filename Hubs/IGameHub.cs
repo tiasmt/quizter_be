@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using quizter_be.Models;
 
 namespace quizter_be.Hubs
 {
@@ -9,6 +10,7 @@ namespace quizter_be.Hubs
         Task HeartBeat(string message);
         Task Beat(int timeRemaining);
         Task GetQuestion();
-        Task NextQuestion(string message);
+        Task NextQuestion(Question question);
+        Task CheckAnswer(string message);
     }
 }

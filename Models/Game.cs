@@ -9,5 +9,7 @@ namespace quizter_be.Models
         public Settings GameSettings { get; set; }
         public int Players { get; set; }
 
+        public bool InProgress { get; set; }
+
     }
 }

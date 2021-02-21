@@ -24,7 +24,9 @@ namespace quizter_be.Repository
         {
             var lines = await File.ReadAllLinesAsync(_questionDirectoryPath + $"{category}");
             Random rnd = new Random();
-            var questions = ParseQuestions(lines).OrderBy(x => rnd.Next()).ToList();
+            var questions = ParseQuestions(lines).Where(x => x.Answers.Count <= 4)
+                                                 .OrderBy(x => rnd.Next())
+                                                 .ToList();
             SaveQuestions(questions, gameName, totalNumberOfQuestions);
             return true;
         }
@@ -35,59 +37,69 @@ namespace quizter_be.Repository
             var currentQuestion = new Question();
             var questions = new List<Question>();
 
-            foreach (var line in lines)
+            try
             {
-
-                if (line == string.Empty)
+                foreach (var line in lines)
                 {
-                    if (currentQuestion.Answers != null)
-                        questions.Add(currentQuestion);
+                    if (line == string.Empty)
+                    {
+                        if (currentQuestion.Answers != null)
+                            questions.Add(currentQuestion);
 
-                    currentQuestion = new Question();
-                    currentQuestion.Answers = new List<Answer>();
-                }
-
-
-                else if (line.StartsWith("#Q"))
-                    currentQuestion.Body = line.Substring(2);
-
-                else if (line.StartsWith("^"))
-                    correctAnswer = line.Substring(2);
-
-                else if (line.StartsWith("A")
-                        || line.StartsWith("B")
-                        || line.StartsWith("C")
-                        || line.StartsWith("D")
-                        || line.StartsWith("E")
-                        || line.StartsWith("F")
-                        || line.StartsWith("G")
-                        || line.StartsWith("H"))
-                {
-                    if (line.Contains(correctAnswer))
-                        currentQuestion.Answers.Add(new Answer { Body = line.Substring(2), isCorrect = true });
+                        currentQuestion = new Question();
+                        currentQuestion.Answers = new List<Answer>();
+                    }
                     else
-                        currentQuestion.Answers.Add(new Answer { Body = line.Substring(2), isCorrect = false });
-                }
-                else
-                {
-                    currentQuestion.Body += " " + line;
-                }
+                    {
+                        var prefix = line.Length < 3 ? string.Empty : line.Substring(0, 2);
+                        switch (prefix)
+                        {
+                            case "#Q":
+                                currentQuestion.Body = line.Substring(2);
+                                break;
 
+                            case "^ ":
+                                correctAnswer = line.Substring(2);
+                                break;
+
+                            case "A ":
+                            case "B ":
+                            case "C ":
+                            case "D ":
+                                if (line.Contains(correctAnswer))
+                                    currentQuestion.Answers.Add(new Answer { Body = line.Substring(2), isCorrect = true });
+                                else
+                                    currentQuestion.Answers.Add(new Answer { Body = line.Substring(2), isCorrect = false });
+                                break;
+
+                            default:
+                                currentQuestion.Body += " " + line;
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
             return questions;
+
         }
 
         private void SaveQuestions(List<Question> questions, string gameName, int numberOfQuestions)
         {
 
+            var i = 0;
             try
             {
                 using (var gameQuestionsFile = File.AppendText(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}"))
                 {
-                    for (int i = 0; i < numberOfQuestions; i++)
+                    while (i < numberOfQuestions)
                     {
+                        i++;
                         var question = questions[i];
-                        if (question.Answers.Count == 0) // used when we cannot parse the question correctly
+                        if (question.Answers.Count == 0 || question.Answers.Count > 4) // used when we cannot parse the question correctly
                             continue;
                         gameQuestionsFile.WriteLine();
                         gameQuestionsFile.WriteLine("#Q " + question.Body);
@@ -97,12 +109,14 @@ namespace quizter_be.Repository
                             Answer answer = question.Answers[j];
                             gameQuestionsFile.WriteLine(answerPrefixes[j] + question.Answers[j].Body);
                         }
+
+
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex);
+                Console.WriteLine(ex);
             }
 
 
@@ -112,9 +126,18 @@ namespace quizter_be.Repository
             throw new NotImplementedException();
         }
 
-        public Task<Question> GetQuestion(int questionId)
+        public async Task<Question> GetQuestion(string gameName, int questionId)
         {
-            throw new NotImplementedException();
+            var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
+            var questions = ParseQuestions(lines);
+            return questions[questionId];
+        }
+
+        public async Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId)
+        {  
+            var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
+            var questions = ParseQuestions(lines);
+            return questions[questionId].Answers[answerId].isCorrect;
         }
     }
 }

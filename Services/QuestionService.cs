@@ -18,14 +18,14 @@ namespace quizter_be.Services
         {
             return await _storage.CreateQuestions(gameName, category, totalNumberOfQuestions);
         }
-        public Task<bool> CheckAnswer(string gameName, string playerName, int questionId)
+        public async Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId)
         {
-            throw new System.NotImplementedException();
+            return await _storage.CheckAnswer(gameName, playerName, questionId, answerId);
         }
 
-        public Task<List<string>> NextQuestion(int questionId)
+        public async Task<Question> NextQuestion(string gameName, int questionId)
         {
-            throw new System.NotImplementedException();
+            return await _storage.GetQuestion(gameName, questionId);
         }
     }
 }

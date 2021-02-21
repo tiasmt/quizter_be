@@ -44,24 +44,62 @@ namespace quizter_be.Controllers
         {
             var game = new Game { GameName = gameName, GameCategory = gameCategory };
             await _gameService.SetSettings(game, settings);
-            await _questionService.CreateQuestions(gameName,gameCategory, settings.TotalNumberOfQuestions);
+            await _questionService.CreateQuestions(gameName, gameCategory, settings.TotalNumberOfQuestions);
             return Ok();
         }
+
         [HttpPost("CreatePlayer")]
         public async Task<IActionResult> CreatePlayer(string username, string avatar, string gameName)
         {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            await gamehub.CreateTimer(gameName);
             var player = new Player { Username = username, Avatar = avatar };
             var id = await _gameService.CreatePlayer(player, gameName);
-            var gamehub = new GameHub(_hubContext, _gameService);
-            await gamehub.CreateTimer(gameName);
             return Ok(id);
         }
 
-        // [HttpPost("CheckQuestion")]
-        // public async Task<IActionResult> CheckQuestion(string username, string gameName)
-        // {
-           
-        //     return Ok();
-        // }
+        [HttpPost("StartGame")]
+        public async Task<IActionResult> StartGame(string gameName)
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            var question = await _questionService.NextQuestion(gameName, 0);
+            await _hubContext.Clients.All.NextQuestion(question); 
+            gamehub.StartTimer();
+            return Ok();
+        }
+
+        [HttpPost("StartTimer")]
+        public void StartTimer()
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StartTimer();
+        }
+
+        [HttpPost("StopTimer")]
+        public void StopTimer()
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StopTimer();
+        }
+
+        [HttpPost("CheckAnswer")]
+        public async Task<IActionResult> CheckAnswer(string gameName, string username, int questionId, int answerId)
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StopTimer();  
+            var isCorrect = await _questionService.CheckAnswer(gameName, username, questionId, answerId);          
+            return Ok(isCorrect);
+        }
+
+        
+        [HttpPost("GetQuestion")]
+        public async Task<IActionResult> GetQuestion(string gameName, int questionId)
+        {
+            var question = await _questionService.NextQuestion(gameName, questionId);
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StartTimer();   
+            await _hubContext.Clients.All.NextQuestion(question);       
+            return Ok();
+        }
     }
 }
