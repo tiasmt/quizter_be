@@ -12,6 +12,6 @@ namespace quizter_be.Services
         Task<int> CreatePlayer(Player player, string gameName);
         Task<Game> GetGame(string gameName);
 
-        Task SetPlayerReady(string gameName, string username, int questionId);
+        Task SetPlayerReady(string gameName, string username);
     }
 }

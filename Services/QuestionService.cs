@@ -18,9 +18,9 @@ namespace quizter_be.Services
         {
             return await _storage.CreateQuestions(gameName, category, totalNumberOfQuestions);
         }
-        public async Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId)
+        public async Task<bool> CheckAnswer(string gameName, string playerName, int answerId)
         {
-            return await _storage.CheckAnswer(gameName, playerName, questionId, answerId);
+            return await _storage.CheckAnswer(gameName, playerName, answerId);
         }
 
         public async Task<Question> NextQuestion(string gameName, int? questionId = null)

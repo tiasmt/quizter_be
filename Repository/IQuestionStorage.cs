@@ -9,6 +9,6 @@ namespace quizter_be.Repository
         Task<IEnumerable<Question>> GetAllQuestions(string category);
         Task<bool> CreateQuestions(string gameName, string category, int totalNumberOfQuestions);
         Task<Question> GetQuestion(string gameName, int? questionId = null);
-        Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId);
+        Task<bool> CheckAnswer(string gameName, string playerName, int answerId);
     }
 }

@@ -41,9 +41,9 @@ namespace quizter_be.Services
             return await _storage.GetGame(gameName);
         }
 
-        public async Task SetPlayerReady(string gameName, string username, int questionId)
+        public async Task SetPlayerReady(string gameName, string username)
         {
-            await _storage.SetPlayerReady(gameName, username, questionId);
+            await _storage.SetPlayerReady(gameName, username);
         }
     }
 }

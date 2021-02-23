@@ -135,11 +135,13 @@ namespace quizter_be.Repository
             return questions[nextQuestionId];
         }
 
-        public async Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId)
+        public async Task<bool> CheckAnswer(string gameName, string playerName, int answerId)
         {  
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
-            return questions[questionId].Answers[answerId].isCorrect;
+            Console.WriteLine(_currentQuestionId);
+            Console.WriteLine(questions[_currentQuestionId]);
+            return questions[_currentQuestionId].Answers[answerId].isCorrect;
         }
 
         private int GetCurrentQuestionId(string gameName)

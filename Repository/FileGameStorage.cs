@@ -123,7 +123,7 @@ namespace quizter_be.Repository
             return playerId;
         }
 
-        public async Task SetPlayerReady(string gameName, string username, int questionId)
+        public async Task SetPlayerReady(string gameName, string username)
         {
             var path = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
             var playerData =  await File.ReadAllLinesAsync(path);
