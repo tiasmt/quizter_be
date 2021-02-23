@@ -11,5 +11,7 @@ namespace quizter_be.Services
         Task SetSettings(Game game, Settings settings);
         Task<int> CreatePlayer(Player player, string gameName);
         Task<Game> GetGame(string gameName);
+
+        Task SetPlayerReady(string gameName, string username, int questionId);
     }
 }

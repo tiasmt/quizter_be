@@ -9,6 +9,6 @@ namespace quizter_be.Services
     {
         Task<bool> CreateQuestions(string gameName, string category, int totalNumberOfQuestions);
         Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId);
-        Task<Question> NextQuestion(string gameName, int questionId);
+        Task<Question> NextQuestion(string gameName, int? questionId = null);
     }
 }

@@ -51,8 +51,9 @@ namespace quizter_be.Controllers
         [HttpPost("CreatePlayer")]
         public async Task<IActionResult> CreatePlayer(string username, string avatar, string gameName)
         {
+            username??= "TestPlayer";
             var gamehub = new GameHub(_hubContext, _gameService, _questionService);
-            await gamehub.CreateTimer(gameName);
+            await gamehub.CreateTimers(gameName);
             var player = new Player { Username = username, Avatar = avatar };
             var id = await _gameService.CreatePlayer(player, gameName);
             return Ok(id);
@@ -63,43 +64,45 @@ namespace quizter_be.Controllers
         {
             var gamehub = new GameHub(_hubContext, _gameService, _questionService);
             var question = await _questionService.NextQuestion(gameName, 0);
-            await _hubContext.Clients.All.NextQuestion(question); 
-            gamehub.StartTimer();
+            await _hubContext.Clients.All.SendQuestion(question); 
+            gamehub.StartGameTimer();
             return Ok();
         }
 
-        [HttpPost("StartTimer")]
-        public void StartTimer()
-        {
-            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
-            gamehub.StartTimer();
-        }
-
-        [HttpPost("StopTimer")]
-        public void StopTimer()
-        {
-            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
-            gamehub.StopTimer();
-        }
+       
 
         [HttpPost("CheckAnswer")]
         public async Task<IActionResult> CheckAnswer(string gameName, string username, int questionId, int answerId)
         {
-            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
-            gamehub.StopTimer();  
-            var isCorrect = await _questionService.CheckAnswer(gameName, username, questionId, answerId);          
+            var isCorrect = await _questionService.CheckAnswer(gameName, username, questionId, answerId);
+            await _gameService.SetPlayerReady(gameName, username, questionId);          
             return Ok(isCorrect);
         }
 
         
-        [HttpPost("GetQuestion")]
-        public async Task<IActionResult> GetQuestion(string gameName, int questionId)
-        {
-            var question = await _questionService.NextQuestion(gameName, questionId);
-            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
-            gamehub.StartTimer();   
-            await _hubContext.Clients.All.NextQuestion(question);       
-            return Ok();
-        }
+        // [HttpPost("GetQuestion")]
+        // public async Task<IActionResult> GetQuestion(string gameName, int questionId)
+        // {
+        //     //check if isready = true for all players within game
+        //     var question = await _questionService.NextQuestion(gameName, questionId);
+        //     var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+        //     gamehub.StartTimer();   
+        //     await _hubContext.Clients.All.SendQuestion(question);       
+        //     return Ok();
+        // }
+
+        // [HttpPost("StartTimer")]
+        // public void StartTimer()
+        // {
+        //     var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+        //     gamehub.StartTimer();
+        // }
+
+        // [HttpPost("StopTimer")]
+        // public void StopTimer()
+        // {
+        //     var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+        //     gamehub.StopTimer();
+        // }
     }
 }

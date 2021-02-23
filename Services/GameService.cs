@@ -40,5 +40,10 @@ namespace quizter_be.Services
         {
             return await _storage.GetGame(gameName);
         }
+
+        public async Task SetPlayerReady(string gameName, string username, int questionId)
+        {
+            await _storage.SetPlayerReady(gameName, username, questionId);
+        }
     }
 }

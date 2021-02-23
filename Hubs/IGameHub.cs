@@ -10,7 +10,7 @@ namespace quizter_be.Hubs
         Task HeartBeat(string message);
         Task Beat(int timeRemaining);
         Task GetQuestion();
-        Task NextQuestion(Question question);
+        Task SendQuestion(Question question);
         Task CheckAnswer(string message);
     }
 }

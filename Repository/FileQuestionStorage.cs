@@ -14,6 +14,7 @@ namespace quizter_be.Repository
         private readonly string _gameDirectoryPath;
         private readonly string _defaultQuestionFile = "questions.txt";
         private readonly string[] answerPrefixes = { "A ", "B ", "C ", "D ", "E ", "F ", "G ", "H " };
+        private static int _currentQuestionId = 0;
 
         public FileQuestionStorage(string questionDirectoryPath, string gameDirectoryPath)
         {
@@ -126,11 +127,12 @@ namespace quizter_be.Repository
             throw new NotImplementedException();
         }
 
-        public async Task<Question> GetQuestion(string gameName, int questionId)
+        public async Task<Question> GetQuestion(string gameName, int? questionId = null)
         {
+            int nextQuestionId = questionId?? GetCurrentQuestionId(gameName);
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
-            return questions[questionId];
+            return questions[nextQuestionId];
         }
 
         public async Task<bool> CheckAnswer(string gameName, string playerName, int questionId, int answerId)
@@ -138,6 +140,11 @@ namespace quizter_be.Repository
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
             return questions[questionId].Answers[answerId].isCorrect;
+        }
+
+        private int GetCurrentQuestionId(string gameName)
+        {
+            return ++_currentQuestionId;
         }
     }
 }

@@ -110,15 +110,25 @@ namespace quizter_be.Repository
             var playerId = new List<string>(Directory.EnumerateFiles(parentPath)).Count + 1;
             string[] lines =
             {
+                $"PlayerId: {playerId}",
                 $"Username: {player.Username}",
                 $"Avatar: {player.Avatar}",
                 $"Correct Answers: {player.CorrectAnswers}",
-                $"Wrong Answers: {player.WrongAnswers}"
+                $"Wrong Answers: {player.WrongAnswers}",
+                $"IsReady:  {true}"
             };
 
-            var path = _directoryPath + $"/{gameName}/{_playersFolder}/{playerId}.txt";
+            var path = _directoryPath + $"/{gameName}/{_playersFolder}/{player.Username}.txt";
             await File.WriteAllLinesAsync(path, lines);
             return playerId;
         }
+
+        public async Task SetPlayerReady(string gameName, string username, int questionId)
+        {
+            var path = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
+            var playerData =  await File.ReadAllLinesAsync(path);
+        }
+
+        
     }
 }

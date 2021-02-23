@@ -23,7 +23,7 @@ namespace quizter_be.Services
             return await _storage.CheckAnswer(gameName, playerName, questionId, answerId);
         }
 
-        public async Task<Question> NextQuestion(string gameName, int questionId)
+        public async Task<Question> NextQuestion(string gameName, int? questionId = null)
         {
             return await _storage.GetQuestion(gameName, questionId);
         }
