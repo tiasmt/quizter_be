@@ -41,9 +41,24 @@ namespace quizter_be.Services
             return await _storage.GetGame(gameName);
         }
 
-        public async Task SetPlayerReady(string gameName, string username)
+        public async Task SetPlayerReadyState(string gameName, string username, bool state)
         {
-            await _storage.SetPlayerReady(gameName, username);
+            await _storage.SetPlayerReadyState(gameName, username, state);
+        }
+
+        public async Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect)
+        {
+            return await _storage.SetPlayerScore(gameName, username, isCorrect);
+        }
+
+        public async Task<bool> AllPlayersReady(string gameName)
+        {
+            return await _storage.AllPlayersReady(gameName);
+        }
+
+        public async Task ResetAllPlayersReadyState(string gameName)
+        {
+            await _storage.ResetAllPlayersReadyState(gameName);
         }
     }
 }

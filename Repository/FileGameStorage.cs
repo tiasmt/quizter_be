@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using quizter_be.Models;
 
@@ -9,14 +10,25 @@ namespace quizter_be.Repository
 {
     public class FileGameStorage : IGameStorage
     {
-        
-        private const string Category = "Category: ";
-        private const string TotalNumberOfPlayers = "Total Number Of Players: ";
-        private const string TotalNumberOfQuestions = "Total Number Of Questions: ";
-        private const string TimePerQuestion = "Time Per Question: ";
         private readonly string _directoryPath;
         private readonly string _defaultFileName = "GameOverview";
         private readonly string _playersFolder = "Players";
+        
+        //Game Overview Prefix
+        private const string Category = "Category: ";
+        private const string TotalNumberOfPlayersPrefix = "Total Number Of Players: ";
+        private const string TotalNumberOfQuestionsPrefix = "Total Number Of Questions: ";
+        private const string TimePerQuestionPrefix = "Time Per Question: ";
+        private const string CurrentQuestionPrefix = "Current Question: ";
+        
+        //Player file Prefix
+        private const string PlayerIdPrefix = "PlayerId: ";
+        private const string UsernamePrefix = "Username: ";
+        private const string AvatarPrefix = "Avatar: ";
+        private const string CorrectAnswersPrefix = "Correct Answers: ";
+        private const string WrongAnswersPrefix = "Wrong Answers: ";
+        private const string IsReadyPrefix = "IsReady: ";
+        
         public FileGameStorage(string directoryPath)
         {
             _directoryPath = directoryPath;
@@ -51,13 +63,13 @@ namespace quizter_be.Repository
             game.GameName = name;
 
             var path = _directoryPath + name + '/' + _defaultFileName + ".txt";
-            var gameData =  await File.ReadAllLinesAsync(path);
+            var gameData = await File.ReadAllLinesAsync(path);
             //Parse data
             game.GameCategory = gameData[0].Substring(Category.Length);
-            game.GameSettings.NumberOfPlayers = int.Parse(gameData[1].Substring(TotalNumberOfPlayers.Length));
-            game.GameSettings.TotalNumberOfQuestions = int.Parse(gameData[2].Substring(TotalNumberOfQuestions.Length));
-            game.GameSettings.TimePerQuestion = int.Parse(gameData[3].Substring(TimePerQuestion.Length));
-            
+            game.GameSettings.NumberOfPlayers = int.Parse(gameData[1].Substring(TotalNumberOfPlayersPrefix.Length));
+            game.GameSettings.TotalNumberOfQuestions = int.Parse(gameData[2].Substring(TotalNumberOfQuestionsPrefix.Length));
+            game.GameSettings.TimePerQuestion = int.Parse(gameData[3].Substring(TimePerQuestionPrefix.Length));
+
             return game;
         }
 
@@ -96,7 +108,8 @@ namespace quizter_be.Repository
                 $"Category: {game.GameCategory}",
                 $"Total Number Of Players: {settings.NumberOfPlayers}",
                 $"Total Number Of Questions: {settings.TotalNumberOfQuestions}",
-                $"Time Per Question: {settings.TimePerQuestion}"
+                $"Time Per Question: {settings.TimePerQuestion}",
+                $"Current Question: 0"
             };
             var path = _directoryPath + $"/{game.GameName}/{_defaultFileName}.txt";
             await File.WriteAllLinesAsync(path, lines);
@@ -115,7 +128,7 @@ namespace quizter_be.Repository
                 $"Avatar: {player.Avatar}",
                 $"Correct Answers: {player.CorrectAnswers}",
                 $"Wrong Answers: {player.WrongAnswers}",
-                $"IsReady:  {true}"
+                $"IsReady: {true}"
             };
 
             var path = _directoryPath + $"/{gameName}/{_playersFolder}/{player.Username}.txt";
@@ -123,12 +136,72 @@ namespace quizter_be.Repository
             return playerId;
         }
 
-        public async Task SetPlayerReady(string gameName, string username)
+        public async Task SetPlayerReadyState(string gameName, string username, bool state)
         {
             var path = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
-            var playerData =  await File.ReadAllLinesAsync(path);
+            var playerData = await File.ReadAllLinesAsync(path);
+            playerData[5] = IsReadyPrefix + state.ToString();
+            await File.WriteAllLinesAsync(path, playerData);
         }
 
-        
+        public async Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect)
+        {
+            var path = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
+            var playerData = await File.ReadAllLinesAsync(path);
+            if (isCorrect)
+            {
+                var correctAnswers = int.Parse(playerData[3].Substring(CorrectAnswersPrefix.Length)) + 1;
+                playerData[3] = CorrectAnswersPrefix + correctAnswers.ToString();
+            }
+            else
+            {
+                var wrongAnswers = int.Parse(playerData[4].Substring(WrongAnswersPrefix.Length)) + 1;
+                playerData[4] = WrongAnswersPrefix + wrongAnswers.ToString();
+            }
+            await File.WriteAllLinesAsync(path, playerData);
+            var player = GetPlayerDetails(playerData);
+            player.LastAnswerIsCorrect = isCorrect;
+            return player;
+        }
+
+        public Player GetPlayerDetails(string[] playerData)
+        {
+            var player = new Player();
+            player.PlayerId = int.Parse(playerData[0].Substring(PlayerIdPrefix.Length));
+            player.Username = playerData[1].Substring(UsernamePrefix.Length);
+            player.Avatar = playerData[2].Substring(AvatarPrefix.Length);
+            player.CorrectAnswers = int.Parse(playerData[3].Substring(CorrectAnswersPrefix.Length));
+            player.WrongAnswers = int.Parse(playerData[4].Substring(WrongAnswersPrefix.Length));
+            return player;
+        }
+
+        public async Task<bool> AllPlayersReady(string gameName)
+        {
+            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach(var player in allPlayers)
+            {
+                if(!(await IsPlayerReady(player)))
+                    return false;
+            }
+            return true;
+        }
+
+        private async Task<bool> IsPlayerReady(string playerFile)
+        {
+            var playerData = await File.ReadAllLinesAsync(playerFile);
+            return bool.Parse(playerData[5].Substring(IsReadyPrefix.Length));
+        }
+
+        public async Task ResetAllPlayersReadyState(string gameName)
+        {
+            var fileExtensionPattern = @"(?<=Players\\)(.*)(?=.txt)";
+            var rg = new Regex(fileExtensionPattern); 
+            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach(var player in allPlayers)
+            {
+                var username = rg.Matches(player)[0].ToString();
+                await SetPlayerReadyState(gameName, username, false);
+            }
+        }
     }
 }

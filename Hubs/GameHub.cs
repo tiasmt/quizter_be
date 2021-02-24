@@ -35,7 +35,7 @@ namespace quizter_be.Hubs
             _gameTimer.Enabled = false;
             _timeLeft = await GetInitialTime(gameName);
             _initialTime = _timeLeft;
-            _gameTimer.Elapsed += (sender, e) => HeartBeat(sender, e);
+            _gameTimer.Elapsed += (sender, e) => HeartBeat(sender, e, gameName);
             _gameTimer.Interval = 1000;
         }
 
@@ -48,9 +48,12 @@ namespace quizter_be.Hubs
 
         private async void NextQuestion(object sender, System.Timers.ElapsedEventArgs e, string gameName)
         {
-            var question = await _questionService.NextQuestion(gameName);
-            await SendQuestion(question);
-            StartTimer(_gameTimer);
+            if (await _gameService.AllPlayersReady(gameName))
+            {
+                var question = await _questionService.NextQuestion(gameName);
+                await SendQuestion(question);
+                StartTimer(_gameTimer);
+            }
         }
 
         public void StopTimer(Timer timer)
@@ -68,13 +71,14 @@ namespace quizter_be.Hubs
             _gameTimer.Enabled = true;
         }
 
-        public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e)
+        public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e, string gameName)
         {
             _timeLeft--;
             await _hubContext.Clients.All.Beat(_timeLeft);
             if (_timeLeft <= 0)
             {
                 _timeLeft = _initialTime;
+                await _gameService.ResetAllPlayersReadyState(gameName);
                 StopTimer(_gameTimer);
                 await CheckAnswer();
                 StartTimer(_questionTimer);
@@ -89,7 +93,7 @@ namespace quizter_be.Hubs
 
         private async Task CheckAnswer()
         {
-           await _hubContext.Clients.All.CheckAnswer("CheckAnswer");  
+            await _hubContext.Clients.All.CheckAnswer("CheckAnswer");
         }
 
         private async Task SendQuestion(Question question)

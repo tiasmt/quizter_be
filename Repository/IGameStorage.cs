@@ -14,6 +14,9 @@ namespace quizter_be.Repository
         Task SetSettings(Game game, Settings settings);
         Task<int> CreatePlayer(Player player, string gameName);
 
-        Task SetPlayerReady(string gameName, string username);
+        Task SetPlayerReadyState(string gameName, string username, bool state);
+        Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect);
+        Task<bool> AllPlayersReady(string gameName);
+        Task ResetAllPlayersReadyState(string gameName);
     }
 }

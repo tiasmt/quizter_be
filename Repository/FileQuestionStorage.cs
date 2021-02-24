@@ -13,8 +13,11 @@ namespace quizter_be.Repository
         private readonly string _questionDirectoryPath;
         private readonly string _gameDirectoryPath;
         private readonly string _defaultQuestionFile = "questions.txt";
+        private readonly string _defaultGameOverviewName = "GameOverview";
         private readonly string[] answerPrefixes = { "A ", "B ", "C ", "D ", "E ", "F ", "G ", "H " };
         private static int _currentQuestionId = 0;
+        // Prefixes
+        private const string CurrentQuestionPrefix = "Current Question: ";
 
         public FileQuestionStorage(string questionDirectoryPath, string gameDirectoryPath)
         {
@@ -110,8 +113,6 @@ namespace quizter_be.Repository
                             Answer answer = question.Answers[j];
                             gameQuestionsFile.WriteLine(answerPrefixes[j] + question.Answers[j].Body);
                         }
-
-
                     }
                 }
             }
@@ -129,24 +130,33 @@ namespace quizter_be.Repository
 
         public async Task<Question> GetQuestion(string gameName, int? questionId = null)
         {
-            int nextQuestionId = questionId?? GetCurrentQuestionId(gameName);
+            int nextQuestionId = questionId ?? await GetCurrentQuestionId(gameName, true);
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
             return questions[nextQuestionId];
         }
 
         public async Task<bool> CheckAnswer(string gameName, string playerName, int answerId)
-        {  
+        {
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
-            Console.WriteLine(_currentQuestionId);
-            Console.WriteLine(questions[_currentQuestionId]);
-            return questions[_currentQuestionId].Answers[answerId].isCorrect;
+            var questionId = await GetCurrentQuestionId(gameName);
+            return questions[questionId].Answers[answerId].isCorrect;
         }
 
-        private int GetCurrentQuestionId(string gameName)
+        private async Task<int> GetCurrentQuestionId(string gameName, bool isGetNextQuestion = false)
         {
-            return ++_currentQuestionId;
+            var path = _gameDirectoryPath + $"/{gameName}/{_defaultGameOverviewName}.txt";
+            var playerData = await File.ReadAllLinesAsync(path);
+            var currentQuestionId = int.Parse(playerData.LastOrDefault().Substring(CurrentQuestionPrefix.Length));
+            if (isGetNextQuestion)
+            {
+                playerData[4] = CurrentQuestionPrefix + (currentQuestionId + 1).ToString();
+                currentQuestionId += 1;
+                await File.WriteAllLinesAsync(path, playerData);
+            }
+            return currentQuestionId;
+
         }
     }
 }
