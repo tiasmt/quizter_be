@@ -63,6 +63,7 @@ namespace quizter_be.Controllers
         public async Task<IActionResult> StartGame(string gameName)
         {
             var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            await _hubContext.Clients.All.GameStarted();
             await gamehub.CreateTimers(gameName);
             var question = await _questionService.NextQuestion(gameName, 0);
             await _hubContext.Clients.All.SendQuestion(question);
@@ -77,6 +78,13 @@ namespace quizter_be.Controllers
             var playerInfo = await _gameService.SetPlayerScore(gameName, username, isCorrect);
             await _gameService.SetPlayerReadyState(gameName, username, true);
             return Ok(playerInfo);
+        }
+
+        [HttpPost("JoinGame")]
+        public async Task<IActionResult> JoinGame(string gameName)
+        {
+            var game = await _gameService.GetGame(gameName);
+            return Ok(game);
         }
     }
 }

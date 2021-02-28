@@ -13,14 +13,14 @@ namespace quizter_be.Repository
         private readonly string _directoryPath;
         private readonly string _defaultFileName = "GameOverview";
         private readonly string _playersFolder = "Players";
-        
+
         //Game Overview Prefix
         private const string Category = "Category: ";
         private const string TotalNumberOfPlayersPrefix = "Total Number Of Players: ";
         private const string TotalNumberOfQuestionsPrefix = "Total Number Of Questions: ";
         private const string TimePerQuestionPrefix = "Time Per Question: ";
         private const string CurrentQuestionPrefix = "Current Question: ";
-        
+
         //Player file Prefix
         private const string PlayerIdPrefix = "PlayerId: ";
         private const string UsernamePrefix = "Username: ";
@@ -28,7 +28,7 @@ namespace quizter_be.Repository
         private const string CorrectAnswersPrefix = "Correct Answers: ";
         private const string WrongAnswersPrefix = "Wrong Answers: ";
         private const string IsReadyPrefix = "IsReady: ";
-        
+
         public FileGameStorage(string directoryPath)
         {
             _directoryPath = directoryPath;
@@ -177,10 +177,10 @@ namespace quizter_be.Repository
 
         public async Task<bool> AllPlayersReady(string gameName)
         {
-            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
-            foreach(var player in allPlayers)
+            var allPlayers = Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach (var player in allPlayers)
             {
-                if(!(await IsPlayerReady(player)))
+                if (!(await IsPlayerReady(player)))
                     return false;
             }
             return true;
@@ -195,9 +195,9 @@ namespace quizter_be.Repository
         public async Task ResetAllPlayersReadyState(string gameName)
         {
             var fileExtensionPattern = @"(?<=Players\\)(.*)(?=.txt)";
-            var rg = new Regex(fileExtensionPattern); 
-            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
-            foreach(var player in allPlayers)
+            var rg = new Regex(fileExtensionPattern);
+            var allPlayers = Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach (var player in allPlayers)
             {
                 var username = rg.Matches(player)[0].ToString();
                 await SetPlayerReadyState(gameName, username, false);
@@ -207,10 +207,10 @@ namespace quizter_be.Repository
         public async Task<List<Player>> GetPlayers(string gameName)
         {
             var fileExtensionPattern = @"(?<=Players\\)(.*)(?=.txt)";
-            var rg = new Regex(fileExtensionPattern); 
+            var rg = new Regex(fileExtensionPattern);
             var playersData = new List<Player>();
-            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
-            foreach(var player in allPlayers)
+            var allPlayers = Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach (var player in allPlayers)
             {
                 var username = rg.Matches(player)[0].ToString();
                 var playerPath = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
@@ -220,5 +220,7 @@ namespace quizter_be.Repository
 
             return playersData;
         }
+
+
     }
 }
