@@ -203,5 +203,22 @@ namespace quizter_be.Repository
                 await SetPlayerReadyState(gameName, username, false);
             }
         }
+
+        public async Task<List<Player>> GetPlayers(string gameName)
+        {
+            var fileExtensionPattern = @"(?<=Players\\)(.*)(?=.txt)";
+            var rg = new Regex(fileExtensionPattern); 
+            var playersData = new List<Player>();
+            var allPlayers =  Directory.EnumerateFiles(_directoryPath + $"{gameName}/{_playersFolder}");
+            foreach(var player in allPlayers)
+            {
+                var username = rg.Matches(player)[0].ToString();
+                var playerPath = _directoryPath + $"{gameName}/{_playersFolder}/{username}.txt";
+                var playerData = await File.ReadAllLinesAsync(playerPath);
+                playersData.Add(GetPlayerDetails(playerData));
+            }
+
+            return playersData;
+        }
     }
 }

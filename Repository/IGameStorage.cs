@@ -18,5 +18,6 @@ namespace quizter_be.Repository
         Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect);
         Task<bool> AllPlayersReady(string gameName);
         Task ResetAllPlayersReadyState(string gameName);
+        Task<List<Player>> GetPlayers(string gameName);
     }
 }

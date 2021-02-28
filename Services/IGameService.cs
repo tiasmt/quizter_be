@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using quizter_be.Models;
 
@@ -15,5 +16,6 @@ namespace quizter_be.Services
         Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect);
         Task<bool> AllPlayersReady(string gameName);
         Task ResetAllPlayersReadyState(string gameName);
+        Task<List<Player>> GetPlayers(string gameName);
     }
 }

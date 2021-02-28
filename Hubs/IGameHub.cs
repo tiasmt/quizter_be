@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using quizter_be.Models;
 
@@ -12,5 +13,6 @@ namespace quizter_be.Hubs
         Task GetQuestion();
         Task SendQuestion(Question question);
         Task CheckAnswer(string message);
+        Task PlayerJoined(List<Player> players);
     }
 }

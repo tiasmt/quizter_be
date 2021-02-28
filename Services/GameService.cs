@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using quizter_be.Models;
 using quizter_be.Repository;
@@ -59,6 +60,11 @@ namespace quizter_be.Services
         public async Task ResetAllPlayersReadyState(string gameName)
         {
             await _storage.ResetAllPlayersReadyState(gameName);
+        }
+
+        public async Task<List<Player>> GetPlayers(string gameName)
+        {
+            return await _storage.GetPlayers(gameName);
         }
     }
 }
