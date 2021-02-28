@@ -15,5 +15,6 @@ namespace quizter_be.Hubs
         Task SendQuestion(Question question);
         Task CheckAnswer(string message);
         Task PlayerJoined(List<Player> players);
+        Task SendLeaderboard(List<Player> players);
     }
 }

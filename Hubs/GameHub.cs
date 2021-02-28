@@ -53,6 +53,8 @@ namespace quizter_be.Hubs
                 var question = await _questionService.NextQuestion(gameName);
                 await SendQuestion(question);
                 StartTimer(_gameTimer);
+                var players = await _gameService.GetPlayers(gameName);
+                await _hubContext.Clients.All.SendLeaderboard(players);
             }
         }
 
