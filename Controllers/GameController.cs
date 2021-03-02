@@ -67,7 +67,7 @@ namespace quizter_be.Controllers
             await gamehub.CreateTimers(gameName);
             var question = await _questionService.NextQuestion(gameName, 0);
             await _hubContext.Clients.All.SendQuestion(question);
-            gamehub.StartGameTimer();
+            gamehub.StartGameTimer(gameName);
             return Ok();
         }
 

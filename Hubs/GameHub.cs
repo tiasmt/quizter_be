@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using quizter_be.Models;
 using quizter_be.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -14,8 +15,8 @@ namespace quizter_be.Hubs
         private readonly IQuestionService _questionService;
         private static int _timeLeft;
         private static int _initialTime;
-        private static Timer _gameTimer;
-        private static Timer _questionTimer;
+        private static ConcurrentDictionary<string, Timer> _gameTimers = new ConcurrentDictionary<string, Timer>();
+        private static ConcurrentDictionary<string, Timer> _questionTimers = new ConcurrentDictionary<string, Timer>();
         public GameHub(IHubContext<GameHub, IGameHub> hubContext, IGameService gameService, IQuestionService questionService)
         {
             _hubContext = hubContext;
@@ -31,19 +32,18 @@ namespace quizter_be.Hubs
 
         private async Task CreateGameTimer(string gameName)
         {
-            _gameTimer ??= new Timer(1000);
-            _gameTimer.Enabled = false;
+            var currentTimer = _gameTimers.GetOrAdd(gameName, new Timer(1000));
+            currentTimer.Enabled = false;
             _timeLeft = await GetInitialTime(gameName);
             _initialTime = _timeLeft;
-            _gameTimer.Elapsed += (sender, e) => HeartBeat(sender, e, gameName);
-            _gameTimer.Interval = 1000;
+            currentTimer.Elapsed += (sender, e) => HeartBeat(sender, e, gameName);
+            currentTimer.Interval = 1000;
         }
-
         private void CreateQuestionTimer(string gameName)
         {
-            _questionTimer ??= new Timer(2000);
-            _questionTimer.Enabled = false;
-            _questionTimer.Elapsed += (sender, e) => NextQuestion(sender, e, gameName);
+            var currentTimer = _questionTimers.GetOrAdd(gameName, new Timer(2000));
+            currentTimer.Enabled = false;
+            currentTimer.Elapsed += (sender, e) => NextQuestion(sender, e, gameName);
         }
 
         private async void NextQuestion(object sender, System.Timers.ElapsedEventArgs e, string gameName)
@@ -51,8 +51,13 @@ namespace quizter_be.Hubs
             if (await _gameService.AllPlayersReady(gameName))
             {
                 var question = await _questionService.NextQuestion(gameName);
-                await SendQuestion(question);
-                StartTimer(_gameTimer);
+                await SendQuestion(gameName, question);
+
+                if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
+                {
+                    StartTimer(gameTimer);
+                }
+
                 var players = await _gameService.GetPlayers(gameName);
                 await _hubContext.Clients.All.SendLeaderboard(players);
             }
@@ -68,9 +73,10 @@ namespace quizter_be.Hubs
             timer.Enabled = true;
         }
 
-        public void StartGameTimer()
+        public void StartGameTimer(string gameName)
         {
-            _gameTimer.Enabled = true;
+            if (_gameTimers.TryGetValue(gameName, out Timer timer))
+                StartTimer(timer);
         }
 
         public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e, string gameName)
@@ -81,9 +87,17 @@ namespace quizter_be.Hubs
             {
                 _timeLeft = _initialTime;
                 await _gameService.ResetAllPlayersReadyState(gameName);
-                StopTimer(_gameTimer);
+
+                if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
+                {
+                    StopTimer(gameTimer);
+                }
+
                 await CheckAnswer();
-                StartTimer(_questionTimer);
+                if (_questionTimers.TryGetValue(gameName, out Timer questionTimer))
+                {
+                    StartTimer(questionTimer);
+                }
             }
         }
 
@@ -98,10 +112,13 @@ namespace quizter_be.Hubs
             await _hubContext.Clients.All.CheckAnswer("CheckAnswer");
         }
 
-        private async Task SendQuestion(Question question)
+        private async Task SendQuestion(string gameName, Question question)
         {
             await _hubContext.Clients.All.SendQuestion(question);
-            StopTimer(_questionTimer);
+            if (_questionTimers.TryGetValue(gameName, out Timer questionTimer))
+            {
+                StopTimer(questionTimer);
+            }
         }
 
 
