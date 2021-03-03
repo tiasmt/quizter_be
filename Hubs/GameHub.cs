@@ -13,10 +13,11 @@ namespace quizter_be.Hubs
         private readonly IHubContext<GameHub, IGameHub> _hubContext;
         private readonly IGameService _gameService;
         private readonly IQuestionService _questionService;
-        private static int _timeLeft;
-        private static int _initialTime;
         private static ConcurrentDictionary<string, Timer> _gameTimers = new ConcurrentDictionary<string, Timer>();
         private static ConcurrentDictionary<string, Timer> _questionTimers = new ConcurrentDictionary<string, Timer>();
+        private static ConcurrentDictionary<string, int> _timeLeft = new ConcurrentDictionary<string, int>();
+        private static ConcurrentDictionary<string, int> _initialTime = new ConcurrentDictionary<string, int>();
+        
         public GameHub(IHubContext<GameHub, IGameHub> hubContext, IGameService gameService, IQuestionService questionService)
         {
             _hubContext = hubContext;
@@ -39,8 +40,8 @@ namespace quizter_be.Hubs
         {
             var currentTimer = _gameTimers.GetOrAdd(gameName, new Timer(1000));
             currentTimer.Enabled = false;
-            _timeLeft = await GetInitialTime(gameName);
-            _initialTime = _timeLeft;
+            _timeLeft.GetOrAdd(gameName, await GetInitialTime(gameName));
+            _initialTime.GetOrAdd(gameName, _timeLeft[gameName]);
             currentTimer.Elapsed += (sender, e) => HeartBeat(sender, e, gameName);
             currentTimer.Interval = 1000;
         }
@@ -86,11 +87,13 @@ namespace quizter_be.Hubs
 
         public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e, string gameName)
         {
-            _timeLeft--;
-            await _hubContext.Clients.Groups(gameName).Beat(_timeLeft);
-            if (_timeLeft <= 0)
+            _timeLeft.TryGetValue(gameName, out var timeLeft);
+            timeLeft--;
+            _timeLeft[gameName] = timeLeft;
+            await _hubContext.Clients.Groups(gameName).Beat(timeLeft);
+            if (timeLeft <= 0)
             {
-                _timeLeft = _initialTime;
+                _timeLeft[gameName] = _initialTime[gameName];
                 await _gameService.ResetAllPlayersReadyState(gameName);
 
                 if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
