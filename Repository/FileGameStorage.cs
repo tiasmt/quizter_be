@@ -52,7 +52,7 @@ namespace quizter_be.Repository
             }
             catch (Exception e)
             {
-                return null;
+                throw e;
             }
         }
 
@@ -97,7 +97,7 @@ namespace quizter_be.Repository
             }
             catch (Exception e)
             {
-                return null;
+                throw e;
             }
         }
 

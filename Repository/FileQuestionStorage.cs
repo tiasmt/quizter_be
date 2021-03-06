@@ -15,6 +15,7 @@ namespace quizter_be.Repository
         private readonly string _defaultQuestionFile = "questions.txt";
         private readonly string _defaultGameOverviewName = "GameOverview";
         private readonly string[] answerPrefixes = { "A ", "B ", "C ", "D ", "E ", "F ", "G ", "H " };
+        private int _maxAnswerLength = 20;
         // Prefixes
         private const string CurrentQuestionPrefix = "Current Question: ";
 
@@ -102,7 +103,7 @@ namespace quizter_be.Repository
                     {
                         i++;
                         var question = questions[i];
-                        if (question.Answers.Count == 0 || question.Answers.Count > 4) // used when we cannot parse the question correctly
+                        if (question.Answers.Count == 0 || question.Answers.Count > 4 || question.Answers.Any(x => x.Body.Length > _maxAnswerLength)) // used when we cannot parse the question correctly and remove long answers
                             continue;
                         gameQuestionsFile.WriteLine();
                         gameQuestionsFile.WriteLine("#Q " + question.Body);
