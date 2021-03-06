@@ -8,5 +8,11 @@
     <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.4.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Questions\**">
+      <CopyToOutputDirectory>Questions</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 
 </Project>
