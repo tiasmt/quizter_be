@@ -35,6 +35,8 @@ namespace quizter_be
                     {
                         builder.WithOrigins("https://localhost:8080").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                         builder.WithOrigins("http://localhost:8080").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                        builder.WithOrigins("https://quizterr.herokuapp.com/").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                        builder.WithOrigins("http://quizterr.herokuapp.com/").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                     });
             });
             services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"./Repo/Games/"));
