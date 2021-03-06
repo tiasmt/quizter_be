@@ -60,21 +60,19 @@ namespace quizter_be.Hubs
                 await SendQuestion(gameName, question);
 
                 if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
-                {
                     StartTimer(gameTimer);
-                }
 
                 var players = await _gameService.GetPlayers(gameName);
                 await _hubContext.Clients.Groups(gameName).SendLeaderboard(players);
             }
         }
 
-        public void StopTimer(Timer timer)
+        private void StopTimer(Timer timer)
         {
             timer.Enabled = false;
         }
 
-        public void StartTimer(Timer timer)
+        private void StartTimer(Timer timer)
         {
             timer.Enabled = true;
         }
@@ -83,6 +81,12 @@ namespace quizter_be.Hubs
         {
             if (_gameTimers.TryGetValue(gameName, out Timer timer))
                 StartTimer(timer);
+        }
+
+        public void StopGameTimer(string gameName)
+        {
+            if(_gameTimers.TryGetValue(gameName, out Timer timer))
+                StopTimer(timer);
         }
 
         public async void HeartBeat(object sender, System.Timers.ElapsedEventArgs e, string gameName)
@@ -95,17 +99,11 @@ namespace quizter_be.Hubs
             {
                 _timeLeft[gameName] = _initialTime[gameName];
                 await _gameService.ResetAllPlayersReadyState(gameName);
-
                 if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
-                {
                     StopTimer(gameTimer);
-                }
-
                 await CheckAnswer(gameName);
                 if (_questionTimers.TryGetValue(gameName, out Timer questionTimer))
-                {
                     StartTimer(questionTimer);
-                }
             }
         }
 
@@ -124,9 +122,7 @@ namespace quizter_be.Hubs
         {
             await _hubContext.Clients.Groups(gameName).SendQuestion(question);
             if (_questionTimers.TryGetValue(gameName, out Timer questionTimer))
-            {
                 StopTimer(questionTimer);
-            }
         }
 
 

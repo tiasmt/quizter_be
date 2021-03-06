@@ -15,7 +15,6 @@ namespace quizter_be.Repository
         private readonly string _defaultQuestionFile = "questions.txt";
         private readonly string _defaultGameOverviewName = "GameOverview";
         private readonly string[] answerPrefixes = { "A ", "B ", "C ", "D ", "E ", "F ", "G ", "H " };
-        private static int _currentQuestionId = 0;
         // Prefixes
         private const string CurrentQuestionPrefix = "Current Question: ";
 

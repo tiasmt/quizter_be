@@ -86,5 +86,13 @@ namespace quizter_be.Controllers
             var game = await _gameService.GetGame(gameName);
             return Ok(game);
         }
+
+        [HttpPost("Pause")]
+        public IActionResult PauseGame(string gameName)
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StopGameTimer(gameName);
+            return Ok();
+        }
     }
 }
