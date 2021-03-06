@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <Content Include="Questions\**">
-      <CopyToOutputDirectory>Questions</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
