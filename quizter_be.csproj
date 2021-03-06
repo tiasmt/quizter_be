@@ -14,5 +14,11 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Repo\Games\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 
 </Project>
