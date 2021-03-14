@@ -87,14 +87,14 @@ namespace quizter_be.Repository
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
             using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     SELECT is_ready FROM players WHERE game_id = gameId;", connection))
+                                                 SELECT is_ready FROM players WHERE game_id = gameId;", connection))
             {
                 cmd.Parameters.AddWithValue("gameName", gameName);
                 using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
                 {
                     while (dr.Read())
                     {
-                        areReady = dr.GetFieldValue<bool>("is_ready");;
+                        areReady = dr.GetFieldValue<bool>("is_ready");
                     }
                 }
             }
@@ -102,13 +102,171 @@ namespace quizter_be.Repository
         }
 
 
-
-        public Task<IEnumerable<Game>> GetAllGames()
+        public async Task<string> SetCategory(string gameName, string category)
         {
-            throw new System.NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"UPDATE games SET category = @category WHERE game_name = @gameName;", connection))
+            {
+                cmd.Parameters.AddWithValue("gameName", gameName);
+                cmd.Parameters.AddWithValue("category", category);
+                await cmd.ExecuteNonQueryAsync();
+            }
+            return category;
         }
 
-        public Task<Game> GetGame(string gameName)
+        public async Task SetSettings(Game game, Settings settings)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(_connectionString);
+                connection.Open();
+                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
+                                                     INSERT INTO settings (game_id, number_of_questions, time_per_question)
+                                                     VALUES (gameId, @numberOfQuestions, @timePerQuestion);", connection))
+                {
+                    cmd.Parameters.AddWithValue("gameName", game.GameName);
+                    cmd.Parameters.AddWithValue("numberOfQuestions", settings.NumberOfPlayers);
+                    cmd.Parameters.AddWithValue("timePerQuestion", settings.TimePerQuestion);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                //log exception
+            }
+
+        }
+
+        public async Task<Game> GetGame(string gameName)
+        {
+            var game = new Game();
+            game.GameSettings = new Settings();
+            game.GameName = gameName;
+
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"SELECT * 
+                                                FROM games g
+                                                JOIN settings s ON s.game_id = g.game_id 
+                                                WHERE game_name = @gameName;", connection))
+            {
+                cmd.Parameters.AddWithValue("gameName", gameName);
+                using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
+                {
+                    while (dr.Read())
+                    {
+                        game.GameCategory = dr.GetFieldValue<string>("category");
+                        game.GameSettings.TotalNumberOfQuestions = dr.GetFieldValue<int>("total_number_of_questions");
+                        game.GameSettings.TimePerQuestion = dr.GetFieldValue<int>("time_per_question");
+                    }
+                }
+            }
+            return game;
+        }
+
+
+        public async Task<List<Player>> GetPlayers(string gameName)
+        {
+            var players = new List<Player>();
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"SELECT player_name, avatar, correct_answers, wrong_answers, is_ready 
+                                                FROM games g
+                                                JOIN players p ON p.game_id = g.game_id 
+                                                WHERE game_name = @gameName;", connection))
+            {
+                cmd.Parameters.AddWithValue("gameName", gameName);
+                using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
+                {
+                    while (dr.Read())
+                    {
+                        var player = new Player();
+                        player.Username = dr.GetFieldValue<string>("player_name");
+                        player.Avatar = dr.GetFieldValue<string>("avatar");
+                        player.CorrectAnswers = dr.GetFieldValue<int>("correct_answers");
+                        player.WrongAnswers = dr.GetFieldValue<int>("wrong_answers");
+                        player.IsReady = dr.GetFieldValue<bool>("is_ready");
+                        players.Add(player);
+                    }
+                }
+            }
+            return players;
+        }
+
+        public async Task ResetAllPlayersReadyState(string gameName)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(_connectionString);
+                connection.Open();
+                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
+                                                     UPDATE players SET is_ready = @state WHERE game_id = gameId;", connection))
+                {
+                    cmd.Parameters.AddWithValue("gameName", gameName);
+                    cmd.Parameters.AddWithValue("state", false);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                //log exception
+            }
+            
+        }
+
+
+
+        public async Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect)
+        {
+            int playerId = 0;
+            try
+            {
+                using var connection = new NpgsqlConnection(_connectionString);
+                connection.Open();
+                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
+                                                     UPDATE players SET correct_answers = correct_answers + @isCorrect, SET wrong_answers = wrong_answers + @isWrong WHERE game_id = gameId RETURNING id;", connection))
+                {
+                    cmd.Parameters.AddWithValue("gameName", gameName);
+                    cmd.Parameters.AddWithValue("isCorrect", isCorrect ? 1 : 0);
+                    cmd.Parameters.AddWithValue("isWrong", isCorrect ? 0 : 1);
+                    playerId = await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                //log exception
+            }
+
+            return await GetPlayerDetails(playerId);
+        }
+
+        private async Task<Player> GetPlayerDetails(int playerId)
+        {
+            var player = new Player();
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"SELECT * FROM players WHERE player_id = @playerId;", connection))
+            {
+                cmd.Parameters.AddWithValue("playerId", playerId);
+                await cmd.ExecuteNonQueryAsync();
+                using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
+                {
+                    while (dr.Read())
+                    {
+                        player.Username = dr.GetFieldValue<string>("player_name");
+                        player.Avatar = dr.GetFieldValue<string>("avatar");
+                        player.CorrectAnswers = dr.GetFieldValue<int>("correct_answers");
+                        player.WrongAnswers = dr.GetFieldValue<int>("wrong_answers");
+                        player.IsReady = dr.GetFieldValue<bool>("is_ready");
+                    }
+                }
+            }
+
+            return player;
+        }
+
+        public Task<IEnumerable<Game>> GetAllGames()
         {
             throw new System.NotImplementedException();
         }
@@ -118,30 +276,5 @@ namespace quizter_be.Repository
             throw new System.NotImplementedException();
         }
 
-        public Task<List<Player>> GetPlayers(string gameName)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task ResetAllPlayersReadyState(string gameName)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task<string> SetCategory(string gameName, string category)
-        {
-            throw new System.NotImplementedException();
-        }
-
-
-        public Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public Task SetSettings(Game game, Settings settings)
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }
