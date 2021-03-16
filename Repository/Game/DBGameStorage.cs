@@ -30,7 +30,7 @@ namespace quizter_be.Repository
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
 
             return gameName;
@@ -42,9 +42,11 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     INSERT INTO players (player_name, avatar, game_id, correct_answers, wrong_answers, last_answer_is_correct, is_ready)
-                                                     VALUES (@playerName, @avatar, gameId, 0, 0, 0, 1) RETURNING id;", connection))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO players (player_name, avatar, game_id, correct_answers, wrong_answers, last_answer_is_correct, is_ready)
+                                                    SELECT @playerName, @avatar, game.id, 0, 0, false, true
+                                                    FROM
+                                                    (SELECT id FROM games WHERE game_name = @gameName) game
+                                                    RETURNING id;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("playerName", player.Username);
@@ -54,7 +56,7 @@ namespace quizter_be.Repository
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
 
             return playerId;
@@ -66,8 +68,9 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     UPDATE players SET is_ready = @state WHERE player_name = @username AND game_id = gameId;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players 
+                                                     JOIN games ON games.id = players.game_id
+                                                     SET is_ready = @state WHERE player_name = @username AND game_name = @gameName;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("username", username);
@@ -77,7 +80,7 @@ namespace quizter_be.Repository
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
 
         }
@@ -86,8 +89,10 @@ namespace quizter_be.Repository
             bool areReady = false;
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
-            using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                 SELECT is_ready FROM players WHERE game_id = gameId;", connection))
+            using (var cmd = new NpgsqlCommand(@"SELECT is_ready 
+                                                 FROM players 
+                                                 JOIN games ON games.id = players.game_id
+                                                 WHERE game_name = @gameName;", connection))
             {
                 cmd.Parameters.AddWithValue("gameName", gameName);
                 using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
@@ -121,19 +126,19 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     INSERT INTO settings (game_id, number_of_questions, time_per_question)
-                                                     VALUES (gameId, @numberOfQuestions, @timePerQuestion);", connection))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO settings (game_id, number_of_questions, time_per_question)
+                                                    SELECT game.id, @numberOfQuestions, @timePerQuestion FROM
+                                                    (SELECT id FROM games WHERE game_name = @gameName) game;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", game.GameName);
-                    cmd.Parameters.AddWithValue("numberOfQuestions", settings.NumberOfPlayers);
+                    cmd.Parameters.AddWithValue("numberOfQuestions", settings.TotalNumberOfQuestions);
                     cmd.Parameters.AddWithValue("timePerQuestion", settings.TimePerQuestion);
                     await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
 
         }
@@ -146,9 +151,9 @@ namespace quizter_be.Repository
 
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
-            using (var cmd = new NpgsqlCommand(@"SELECT * 
+            using (var cmd = new NpgsqlCommand(@"SELECT category, number_of_questions, time_per_question 
                                                 FROM games g
-                                                JOIN settings s ON s.game_id = g.game_id 
+                                                JOIN settings s ON s.game_id = g.id 
                                                 WHERE game_name = @gameName;", connection))
             {
                 cmd.Parameters.AddWithValue("gameName", gameName);
@@ -157,7 +162,7 @@ namespace quizter_be.Repository
                     while (dr.Read())
                     {
                         game.GameCategory = dr.GetFieldValue<string>("category");
-                        game.GameSettings.TotalNumberOfQuestions = dr.GetFieldValue<int>("total_number_of_questions");
+                        game.GameSettings.TotalNumberOfQuestions = dr.GetFieldValue<int>("number_of_questions");
                         game.GameSettings.TimePerQuestion = dr.GetFieldValue<int>("time_per_question");
                     }
                 }
@@ -173,7 +178,7 @@ namespace quizter_be.Repository
             connection.Open();
             using (var cmd = new NpgsqlCommand(@"SELECT player_name, avatar, correct_answers, wrong_answers, is_ready 
                                                 FROM games g
-                                                JOIN players p ON p.game_id = g.game_id 
+                                                JOIN players p ON p.game_id = g.id 
                                                 WHERE game_name = @gameName;", connection))
             {
                 cmd.Parameters.AddWithValue("gameName", gameName);
@@ -200,8 +205,9 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     UPDATE players SET is_ready = @state WHERE game_id = gameId;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players 
+                                                     JOIN games ON games.id = players.game_id 
+                                                     SET is_ready = @state WHERE game_name = @gameName;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("state", false);
@@ -210,9 +216,9 @@ namespace quizter_be.Repository
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
-            
+
         }
 
 
@@ -224,8 +230,9 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"SELECT game_id INTO gameId FROM games WHERE game_name = @gameName;
-                                                     UPDATE players SET correct_answers = correct_answers + @isCorrect, SET wrong_answers = wrong_answers + @isWrong WHERE game_id = gameId RETURNING id;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players 
+                                                     JOIN games ON games.id = players.game_id
+                                                     SET correct_answers = correct_answers + @isCorrect, SET wrong_answers = wrong_answers + @isWrong WHERE game_name = @gameName RETURNING id;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("isCorrect", isCorrect ? 1 : 0);
@@ -235,7 +242,7 @@ namespace quizter_be.Repository
             }
             catch (Exception ex)
             {
-                //log exception
+                System.Console.WriteLine(ex.Message);
             }
 
             return await GetPlayerDetails(playerId);
@@ -246,7 +253,7 @@ namespace quizter_be.Repository
             var player = new Player();
             using var connection = new NpgsqlConnection(_connectionString);
             connection.Open();
-            using (var cmd = new NpgsqlCommand(@"SELECT * FROM players WHERE player_id = @playerId;", connection))
+            using (var cmd = new NpgsqlCommand(@"SELECT * FROM players WHERE id = @playerId;", connection))
             {
                 cmd.Parameters.AddWithValue("playerId", playerId);
                 await cmd.ExecuteNonQueryAsync();
