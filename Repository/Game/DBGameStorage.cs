@@ -22,7 +22,7 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"INSERT INTO games (game_name) VALUES (@gameName);", connection))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO games (game_name, question_id) VALUES (@gameName, 1);", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     await cmd.ExecuteNonQueryAsync();
