@@ -39,8 +39,10 @@ namespace quizter_be
                         builder.WithOrigins("http://quizterr.herokuapp.com").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                     });
             });
-            services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"/Repo/Games/"));
-            services.AddScoped<IQuestionStorage>(storage => new FileQuestionStorage(@"Questions/", @"/Repo/Games/"));
+            // services.AddScoped<IGameStorage>(storage => new FileGameStorage(@"/Repo/Games/"));
+            services.AddScoped<IGameStorage>(storage => new DBGameStorage(Configuration));
+            // services.AddScoped<IQuestionStorage>(storage => new FileQuestionStorage(@"./Questions/", @"/Repo/Games/"));
+            services.AddScoped<IQuestionStorage>(storage => new DBQuestionStorage(@"./Questions/", Configuration));
            
             services.AddScoped<IGameService, GameService>();
             services.AddScoped<IQuestionService, QuestionService>();

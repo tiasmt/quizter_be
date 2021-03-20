@@ -9,6 +9,7 @@ namespace quizter_be.Models
         public int CorrectAnswers { get; set; }
         public int WrongAnswers { get; set; }
         public bool LastAnswerIsCorrect { get; set; }
+        public bool IsReady { get; set; }
 
     }
 }
