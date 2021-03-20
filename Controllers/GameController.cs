@@ -94,5 +94,13 @@ namespace quizter_be.Controllers
             gamehub.StopGameTimer(gameName);
             return Ok();
         }
+
+        [HttpPost("StopEverything")]
+        public IActionResult StopEverything()
+        {
+            var gamehub = new GameHub(_hubContext, _gameService, _questionService);
+            gamehub.StopAllTimers();
+            return Ok();
+        }
     }
 }

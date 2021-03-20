@@ -3,6 +3,7 @@ using quizter_be.Models;
 using quizter_be.Services;
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -123,6 +124,20 @@ namespace quizter_be.Hubs
             await _hubContext.Clients.Groups(gameName).SendQuestion(question);
             if (_questionTimers.TryGetValue(gameName, out Timer questionTimer))
                 StopTimer(questionTimer);
+        }
+
+        public void StopAllTimers()
+        {
+            var questionTimers = _questionTimers.Values.ToList();
+            foreach(var timer in questionTimers)
+            {
+                StopTimer(timer);
+            }
+            var gameTimers = _gameTimers.Values.ToList();
+            foreach(var timer in gameTimers)
+            {
+                StopTimer(timer);
+            }
         }
 
 
