@@ -13,7 +13,7 @@ namespace quizter_be.Repository
         private readonly string _connectionString;
         public DBGameStorage(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("DevConnection");
+            _connectionString = configuration.GetConnectionString("ProdConnection");
         }
 
         public async Task<string> CreateGame(string gameName)
