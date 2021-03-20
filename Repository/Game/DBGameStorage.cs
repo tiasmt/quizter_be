@@ -68,9 +68,11 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"UPDATE players 
-                                                     JOIN games ON games.id = players.game_id
-                                                     SET is_ready = @state WHERE player_name = @username AND game_name = @gameName;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players AS p
+                                                    SET is_ready = @state
+                                                     FROM games AS g 
+                                                     WHERE g.id = p.game_id
+                                                     AND p.player_name = @username AND g.game_name = @gameName;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("username", username);
@@ -205,9 +207,11 @@ namespace quizter_be.Repository
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"UPDATE players 
-                                                     JOIN games ON games.id = players.game_id 
-                                                     SET is_ready = @state WHERE game_name = @gameName;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players AS p
+                                                    SET is_ready = @state
+                                                    FROM games AS g
+                                                    WHERE p.game_id = g.id
+                                                    AND g.game_name = @gameName;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
                     cmd.Parameters.AddWithValue("state", false);
@@ -226,18 +230,25 @@ namespace quizter_be.Repository
         public async Task<Player> SetPlayerScore(string gameName, string username, bool isCorrect)
         {
             int playerId = 0;
+            var incrementCorrect = isCorrect ? 1 : 0;
+            var incrementWrong = isCorrect ? 0 : 1;
             try
             {
                 using var connection = new NpgsqlConnection(_connectionString);
                 connection.Open();
-                using (var cmd = new NpgsqlCommand(@"UPDATE players 
-                                                     JOIN games ON games.id = players.game_id
-                                                     SET correct_answers = correct_answers + @isCorrect, SET wrong_answers = wrong_answers + @isWrong WHERE game_name = @gameName RETURNING id;", connection))
+                using (var cmd = new NpgsqlCommand(@"UPDATE players AS p 
+                                                     SET correct_answers = correct_answers + @incrementCorrect, wrong_answers = wrong_answers + @incrementWrong, last_answer_is_correct = @isCorrect   
+                                                     FROM games AS g
+                                                     WHERE g.id = p.game_id
+                                                     AND game_name = @gameName AND player_name = @username RETURNING p.id;", connection))
                 {
                     cmd.Parameters.AddWithValue("gameName", gameName);
-                    cmd.Parameters.AddWithValue("isCorrect", isCorrect ? 1 : 0);
-                    cmd.Parameters.AddWithValue("isWrong", isCorrect ? 0 : 1);
-                    playerId = await cmd.ExecuteNonQueryAsync();
+                    cmd.Parameters.AddWithValue("username", username);
+                    cmd.Parameters.AddWithValue("incrementCorrect", incrementCorrect);
+                    cmd.Parameters.AddWithValue("incrementWrong", incrementWrong);
+                    cmd.Parameters.AddWithValue("isCorrect", isCorrect);
+
+                    playerId = (int)await cmd.ExecuteScalarAsync();
                 }
             }
             catch (Exception ex)
@@ -266,6 +277,8 @@ namespace quizter_be.Repository
                         player.CorrectAnswers = dr.GetFieldValue<int>("correct_answers");
                         player.WrongAnswers = dr.GetFieldValue<int>("wrong_answers");
                         player.IsReady = dr.GetFieldValue<bool>("is_ready");
+                        player.LastAnswerIsCorrect = dr.GetFieldValue<bool>("last_answer_is_correct");
+
                     }
                 }
             }
