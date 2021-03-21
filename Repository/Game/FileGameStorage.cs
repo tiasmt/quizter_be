@@ -223,6 +223,11 @@ namespace quizter_be.Repository
             return playersData;
         }
 
+        public async Task CleanUp()
+        {
+            throw new System.NotImplementedException();
+        }
+
 
     }
 }

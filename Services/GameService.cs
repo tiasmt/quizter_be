@@ -66,5 +66,10 @@ namespace quizter_be.Services
         {
             return await _storage.GetPlayers(gameName);
         }
+
+        public async Task CleanUp()
+        {
+            await _storage.CleanUp();
+        }
     }
 }

@@ -100,6 +100,7 @@ namespace quizter_be.Controllers
         {
             var gamehub = new GameHub(_hubContext, _gameService, _questionService);
             gamehub.StopAllTimers();
+            _gameService.CleanUp();
             return Ok();
         }
     }

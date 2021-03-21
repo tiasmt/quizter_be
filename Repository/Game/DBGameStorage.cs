@@ -286,6 +286,21 @@ namespace quizter_be.Repository
             return player;
         }
 
+        public async Task CleanUp()
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"TRUNCATE TABLE games;
+                                                TRUNCATE TABLE players;
+                                                TRUNCATE TABLE questions;
+                                                TRUNCATE TABLE answers;
+                                                TRUNCATE TABLE settings;;", connection))
+            {
+                await cmd.ExecuteNonQueryAsync();
+
+            }
+        }
+
         public Task<IEnumerable<Game>> GetAllGames()
         {
             throw new System.NotImplementedException();
