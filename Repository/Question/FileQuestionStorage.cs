@@ -135,12 +135,15 @@ namespace quizter_be.Repository
             return questions[nextQuestionId];
         }
 
-        public async Task<bool> CheckAnswer(string gameName, string playerName, int answerId)
+        public async Task<AnswerResponse> CheckAnswer(string gameName, string playerName, int answerId)
         {
+            AnswerResponse data = new AnswerResponse();
             var lines = await File.ReadAllLinesAsync(_gameDirectoryPath + $"/{gameName}/{_defaultQuestionFile}");
             var questions = ParseQuestions(lines);
             var questionId = await GetCurrentQuestionId(gameName);
-            return questions[questionId].Answers[answerId].isCorrect;
+            data.isCorrect = questions[questionId].Answers[answerId].isCorrect;
+            data.correctAnswerId = questions[questionId].Answers.FindIndex(x => x.isCorrect == true);
+            return data;
         }
 
         private async Task<int> GetCurrentQuestionId(string gameName, bool isGetNextQuestion = false)
@@ -157,5 +160,6 @@ namespace quizter_be.Repository
             return currentQuestionId;
 
         }
+
     }
 }

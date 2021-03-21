@@ -30,11 +30,14 @@ namespace quizter_be.Repository
             await SaveQuestions(questions, gameName, totalNumberOfQuestions);
             return true;
         }
-        public async Task<bool> CheckAnswer(string gameName, string playerName, int answerId)
+        public async Task<AnswerResponse> CheckAnswer(string gameName, string playerName, int answerId)
         {
+            var data = new AnswerResponse();
             var questionId = await GetCurrentQuestionId(gameName);
             var answers = await GetAllAnswers(gameName, questionId - 1);
-            return answers[answerId].isCorrect;
+            data.isCorrect = answers[answerId].isCorrect;
+            data.correctAnswerId = answers.FindIndex(x => x.isCorrect);
+            return data;
         }
 
 

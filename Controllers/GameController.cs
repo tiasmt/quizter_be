@@ -74,10 +74,22 @@ namespace quizter_be.Controllers
         [HttpPost("CheckAnswer")]
         public async Task<IActionResult> CheckAnswer(string gameName, string username, int answerId)
         {
-            var isCorrect = await _questionService.CheckAnswer(gameName, username, answerId);
-            var playerInfo = await _gameService.SetPlayerScore(gameName, username, isCorrect);
+            var answer = await _questionService.CheckAnswer(gameName, username, answerId);
+            var playerInfo = await _gameService.SetPlayerScore(gameName, username, answer.isCorrect);
             await _gameService.SetPlayerReadyState(gameName, username, true);
-            return Ok(playerInfo);
+            
+            var response = new PlayerResponse{
+                Avatar = playerInfo.Avatar,
+                CorrectAnswers = playerInfo.CorrectAnswers,
+                WrongAnswers = playerInfo.WrongAnswers,
+                IsReady = playerInfo.IsReady,
+                LastAnswerIsCorrect = playerInfo.LastAnswerIsCorrect,
+                PlayerId = playerInfo.PlayerId,
+                Username = playerInfo.Username,
+                correctAnswerId = answer.correctAnswerId
+            };
+            
+            return Ok(response);
         }
 
         [HttpPost("JoinGame")]
