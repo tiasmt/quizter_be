@@ -55,7 +55,7 @@ namespace quizter_be.Hubs
 
         private async void NextQuestion(object sender, System.Timers.ElapsedEventArgs e, string gameName)
         {
-            if (await _gameService.AllPlayersReady(gameName))
+            if (await _gameService.AllPlayersReady(gameName) && !(await _gameService.GameEnded(gameName)))
             {
                 var question = await _questionService.NextQuestion(gameName);
                 await SendQuestion(gameName, question);
@@ -63,6 +63,11 @@ namespace quizter_be.Hubs
                 if (_gameTimers.TryGetValue(gameName, out Timer gameTimer))
                     StartTimer(gameTimer);
 
+                var players = await _gameService.GetPlayers(gameName);
+                await _hubContext.Clients.Groups(gameName).SendLeaderboard(players);
+            }
+            else if (await _gameService.GameEnded(gameName))
+            {
                 var players = await _gameService.GetPlayers(gameName);
                 await _hubContext.Clients.Groups(gameName).SendLeaderboard(players);
             }

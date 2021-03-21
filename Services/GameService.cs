@@ -71,5 +71,10 @@ namespace quizter_be.Services
         {
             await _storage.CleanUp();
         }
+
+        public async Task<bool> GameEnded(string gameName)
+        {
+            return await _storage.GameEnded(gameName);
+        }
     }
 }

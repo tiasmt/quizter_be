@@ -18,5 +18,6 @@ namespace quizter_be.Services
         Task ResetAllPlayersReadyState(string gameName);
         Task<List<Player>> GetPlayers(string gameName);
         Task CleanUp();
+        Task<bool> GameEnded(string gameName);
     }
 }

@@ -18,6 +18,7 @@ namespace quizter_be.Repository
         {
             _questionDirectoryPath = questionDirectoryPath;
             _connectionString = configuration.GetConnectionString("ProdConnection");
+            // _connectionString = configuration.GetConnectionString("DevConnection");
         }
 
         public async Task<bool> CreateQuestions(string gameName, string category, int totalNumberOfQuestions)

@@ -14,6 +14,7 @@ namespace quizter_be.Repository
         public DBGameStorage(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("ProdConnection");
+            // _connectionString = configuration.GetConnectionString("DevConnection");
         }
 
         public async Task<string> CreateGame(string gameName)
@@ -301,6 +302,30 @@ namespace quizter_be.Repository
             }
         }
 
+        public async Task<bool> GameEnded(string gameName)
+        {
+            bool isEnded = false;
+            using var connection = new NpgsqlConnection(_connectionString);
+            connection.Open();
+            using (var cmd = new NpgsqlCommand(@"SELECT  g.question_id, s.number_of_questions
+                                                FROM games AS g
+                                                JOIN settings AS s ON s.game_id = g.id
+                                                WHERE game_name = @gameName;", connection))
+            {
+                cmd.Parameters.AddWithValue("gameName", gameName);
+                await cmd.ExecuteNonQueryAsync();
+                using (NpgsqlDataReader dr = await cmd.ExecuteReaderAsync())
+                {
+                    while (dr.Read())
+                    {
+                        var questionNumber = dr.GetFieldValue<int>("question_id");
+                        var totalNumberOfQuestions = dr.GetFieldValue<int>("number_of_questions");
+                        isEnded = questionNumber > totalNumberOfQuestions;
+                    }
+                }
+            }
+            return isEnded;
+        }
         public Task<IEnumerable<Game>> GetAllGames()
         {
             throw new System.NotImplementedException();

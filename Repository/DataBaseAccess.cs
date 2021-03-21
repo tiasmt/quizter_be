@@ -15,6 +15,7 @@ public class BaseDataAccess
     public BaseDataAccess(IConfiguration configuration)
     {
         this.ConnectionString = configuration["ConnectionStrings:ProdConnection"];
+        // this.ConnectionString = configuration["ConnectionStrings:DevConnection"];
     }
 
     public BaseDataAccess(string connectionString)

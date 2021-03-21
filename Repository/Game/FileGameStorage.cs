@@ -228,6 +228,9 @@ namespace quizter_be.Repository
             throw new System.NotImplementedException();
         }
 
-
+        public Task<bool> GameEnded(string gameName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
