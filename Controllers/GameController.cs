@@ -86,7 +86,7 @@ namespace quizter_be.Controllers
                 LastAnswerIsCorrect = playerInfo.LastAnswerIsCorrect,
                 PlayerId = playerInfo.PlayerId,
                 Username = playerInfo.Username,
-                correctAnswerId = answer.correctAnswerId
+                correctAnswerId = answer.correctAnswerId + 1
             };
             
             return Ok(response);
