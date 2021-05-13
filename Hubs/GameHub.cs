@@ -7,6 +7,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
+//TODO seperate timer methods
+//TODO use observer pattern to avoid using the services directly 
+
 namespace quizter_be.Hubs
 {
     public class GameHub : Hub<IGameHub>

@@ -6,6 +6,9 @@ using Npgsql;
 using System;
 using System.Data;
 
+//TODO this does not allow for easy switching of DBs : using var connection = new NpgsqlConnection(_connectionString), 
+// repository methods should not be concerned with connecting to a specific store
+
 namespace quizter_be.Repository
 {
     public class DBGameStorage : IGameStorage
